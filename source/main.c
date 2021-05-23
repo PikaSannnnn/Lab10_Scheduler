@@ -210,7 +210,7 @@ int DoorbellButton(int state) {
 	switch (state) {
 		case WAITDB:
 			if (input) {
-				state = WAIT_RELEASE;
+				state = WAIT_DBRELEASE;
 				DBTrigger = 1;			
 			}
 			break;
