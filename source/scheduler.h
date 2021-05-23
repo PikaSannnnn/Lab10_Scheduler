@@ -12,8 +12,8 @@ unsigned long int findGCD(unsigned long int a, unsigned long int b)
 	}
 	return 0;
 }
-////////////////////////////////////////////////////////////////////////////////
-//Struct for Tasks represent a running process in our simple real-time operating system
+
+
 typedef struct _task{
 	signed char state; 		//Task's current state
 	unsigned long period; 		//Task period

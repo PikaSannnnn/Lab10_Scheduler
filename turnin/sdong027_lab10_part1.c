@@ -1,7 +1,7 @@
 /*	Author: sdong027
  *  Partner(s) Name: 
  *	Lab Section:
- *	Assignment: Lab #10  Exercise #2
+ *	Assignment: Lab #10  Exercise #1
  *	Exercise Description: [optional - include for your own benefit]
  *
  *	I acknowledge all content contained herein, excluding template or example
@@ -79,127 +79,49 @@ unsigned char GetKeypadKey() {
 	return('\0');
 }
 
-unsigned char lockflag = 0;
-enum ButtonStates {WAIT, LOCK_WAIT_RELEASE} B_STATES;
-int LockButton(int state) {
-	unsigned char input = ~PINB & 0x80;
-	switch (state) {
-		case WAIT:
-			if (input) {
-				state = LOCK_WAIT_RELEASE;
-				lockflag = 1;			
-			}
-			break;
-		case LOCK_WAIT_RELEASE:
-			if (!input) {
-				state = WAIT;
-			}
-			break;
-		default:
-			state = WAIT;
-			lockflag = 0;
-			break;
-	}
-	return state;
-}
-
-enum LockStates {LOCK, LOCK_RELEASE, WAIT_PRESS, WAIT_RELEASE, UNLOCK} LED_STATES;
-unsigned char passcode[5] = {'1','2','3','4','5'};
-int LockOut(int state) {
-	static unsigned char tmpB;
-	static unsigned short i;
+enum LedStates {OFF, ON} LED_STATES;
+int LedOut(int state) {
 	unsigned char in = GetKeypadKey();
 	switch (state) {
-		case LOCK:
-			if (in == '#' && !(lockflag)) {		// if # pressed, begin sequence
-				state = LOCK_RELEASE;
-			}
-			else {					// wrong input or PB7 pressed, restart
-				i = 0;
-			}
-			
-			break;
-		case LOCK_RELEASE:
-			if (in == '\0' && !(lockflag)) {
-				state = WAIT_PRESS;
-			}
-			else if (lockflag) {
-				state = LOCK;
+		case OFF:
+			if (in != '\0') {
+				state = ON;
 			}
 			break;
-		case WAIT_PRESS:
-			if (in == passcode[i] && !(lockflag)) {	// if a correct character is pressed, continue to next character
-				state = WAIT_RELEASE;
-				i++;
-				if (i >= 5) {
-					state = UNLOCK;
-				}
-			}
-			else if (in == '#' && !(lockflag)) {
-				state = LOCK_RELEASE;
-				i = 0;
-			}
-			else if (in == '\0' && !(lockflag)) {	// if no character pressed (and PB7 not pressed), continue waiting
-				state = WAIT_PRESS;
-			}
-			else {					// wrong input or PB7 pressed, restart
-				state = LOCK;
-				i = 0;
+		case ON:
+			if (in == '\0') {
+				state = OFF;
 			}
 			break;
-		case WAIT_RELEASE:
-			if (in == '\0' && !(lockflag)) {
-				state = WAIT_PRESS;
-			}
-			else if (lockflag) {
-				state = LOCK;
-			}
-			break;
-		case UNLOCK:
-			if (in == '\0' && lockflag) {
-				state = LOCK;			
-			}
-			break;
-		default: 
-			state = LOCK; 
-			i = 0;
-			tmpB = 0x00;			
-			break;
+		default: state = OFF; break;
 	}
 
 	switch (state) {
-		case LOCK:
+		case OFF:
 			PORTB = 0x00;
-			lockflag = 0;
 			break;
-		case UNLOCK:
-			PORTB = 0x01;
+		case ON:
+			PORTB = 0x80;
 			break;
 	}
-	//PINB = tmpB;
 
 	return state;
 }
 
 int main(void) {
 	unsigned char x;
-	static task task1, task2;
-	task *tasks[] = {&task1, &task2};
+	static task task1;
+	task *tasks[] = {&task1};
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
-	DDRB = 0x0F; PORTB = 0xF0;
+	DDRB = 0xFF; PORTB = 0x00;
 	DDRC = 0xF0; PORTC = 0x0F;
 
 	const char start = -1;
 	task1.state = start;
 	task1.period = 50;
 	task1.elapsedTime = task1.period;
-	task1.TickFct = &LockButton;
-
-	task2.state = start;
-	task2.period = 50;
-	task2.elapsedTime = task2.period;
-	task2.TickFct = &LockOut;
+	task1.TickFct = &LedOut;
 
 	TimerSet(50);
 	TimerOn();
