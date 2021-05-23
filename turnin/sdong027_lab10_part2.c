@@ -106,7 +106,6 @@ int LockButton(int state) {
 enum LockStates {LOCK, LOCK_RELEASE, WAIT_PRESS, WAIT_RELEASE, UNLOCK} LED_STATES;
 unsigned char passcode[5] = {'1','2','3','4','5'};
 int LockOut(int state) {
-	static unsigned char tmpB;
 	static unsigned short i;
 	unsigned char in = GetKeypadKey();
 	switch (state) {
@@ -162,8 +161,7 @@ int LockOut(int state) {
 			break;
 		default: 
 			state = LOCK; 
-			i = 0;
-			tmpB = 0x00;			
+			i = 0;			
 			break;
 	}
 
@@ -176,7 +174,6 @@ int LockOut(int state) {
 			PORTB = 0x01;
 			break;
 	}
-	//PINB = tmpB;
 
 	return state;
 }
